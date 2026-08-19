@@ -1,9 +1,20 @@
-app-mongo-data
-app-mongo-data/
+# Dependencies & Build
+node_modules/
+dist/
+build/
+
+# Environment Variables & Secrets
+.env
+
+# Terraform State Files
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Ansible & Vagrant Local Files
+.vagrant/
 vars.yml
 vault.yml
-.vagrant/
+
+# Editor Settings
 .vscode/
-.vscode
-.vscode/*
-.vscode/*.json
