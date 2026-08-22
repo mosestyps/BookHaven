@@ -49,3 +49,46 @@ spec:
   selector:
     app: mongodb
   clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: njengamoses/bookhaven-backend:1.0.4
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb-0.mongodb-service.default.svc.cluster.local:27017/bookhaven"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30000
+  selector:
+    app: backend
