@@ -10,6 +10,7 @@ build/
 *.tfstate
 *.tfstate.backup
 .terraform/
+terraform/terraform.tfvars
 
 # Ansible & Vagrant Local Files
 .vagrant/
