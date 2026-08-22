@@ -16,6 +16,7 @@ terraform/terraform.tfvars
 .vagrant/
 vars.yml
 vault.yml
+inventory.ini
 
 # Editor Settings
 .vscode/

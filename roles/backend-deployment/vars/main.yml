@@ -1,4 +1,2 @@
 ---
-container_name: bookhaven-backend
-network: app-net
-volume: app-mongo-data/app
+backend_image: njengamoses/bookhaven-backend:1.0.2
