@@ -1,46 +1,28 @@
-# BookHaven
+## Live Application
 
-A library catalog app (MERN stack) — React frontend, Node/Express + MongoDB backend.
+**Live URL:** http://34.61.63.222:30001
 
-# Requirements
-Install the following:
-- [Node.js](https://nodejs.org/)
-- [MongoDB](https://www.mongodb.com/try/download/community)
-- [Docker](https://docs.docker.com/engine/install/) (for containerization)
-- [Vagrant](https://www.vagrantup.com/) + [VirtualBox](https://www.virtualbox.org/) (for provisioning)
-- [Ansible](https://docs.ansible.com/) (for configuration management)
+The application is deployed on a self-managed Kubernetes (k3s) cluster running on a Google Cloud Platform Compute Engine instance, provisioned via Terraform and configured via Ansible.
 
-## Run locally (without Docker)
+## Architecture
 
-```bash
-# backend
-cd backend
-npm install
-npm start   # runs on port 5000
+- **Source control:** GitHub, feature-branch workflow with PRs into master
+- **CI:** GitHub Actions — lints/tests on every push
+- **CD:** GitHub Actions — builds and pushes Docker images to Docker Hub on merge to master
+- **Containerization:** Multi-stage Dockerfiles for backend (Node/Express) and frontend (React, served via nginx)
+- **Infrastructure:** Terraform provisions a GCP VPC, subnet, firewall, and Compute Engine VM
+- **Configuration management:** Ansible installs k3s (lightweight Kubernetes) on the VM and prepares MongoDB storage + confirms Docker image availability
+- **Orchestration:** Kubernetes — MongoDB StatefulSet with PersistentVolumeClaim, backend/frontend Deployments with resource limits, all exposed via NodePort Services
 
-# frontend (in a separate terminal)
-cd client
-npm install
-npm start   # runs on port 3000
-```
+See `explanation.md` for full reasoning behind each phase's design decisions.
 
-> **Note:** `npm start`/`npm run build` in `client/` set `NODE_OPTIONS=--openssl-legacy-provider`
-> under the hood. This app uses an older react-scripts (3.x) whose bundled webpack 4
-> is incompatible with the OpenSSL 3 changes in Node 17+. The flag works around it —
-> no action needed, just don't remove it from `package.json`.
+## Tech Stack
 
-Seed some books via the "Add a book" form once both are running.
-
-## How to run with Vagrant + Ansible
-
-```bash
-vagrant up --provision
-```
-
-This provisions a VM, then runs `playbook.yml`, which applies the three
-roles in `roles/`:
-- `setup-mongodb` — runs a MongoDB container
-- `backend-deployment` — pulls and runs the backend image
-- `frontend-deployment` — left for you to complete
-
-See `Structure` for the ansible-playbook directory layout.
+- Frontend: React (Create React App)
+- Backend: Node.js, Express, Mongoose
+- Database: MongoDB
+- CI/CD: GitHub Actions
+- Containerization: Docker, Docker Compose
+- IaC: Terraform (GCP)
+- Configuration Management: Ansible
+- Orchestration: Kubernetes (k3s)
