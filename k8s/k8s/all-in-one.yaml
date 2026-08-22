@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: "mongodb-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+              name: mongo
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+spec:
+  ports:
+    - port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: njengamoses/bookhaven-backend:1.0.4
+          ports:
+            - containerPort: 5000
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          env:
+            - name: MONGODB_URI
+              value: "mongodb://mongodb-0.mongodb-service.default.svc.cluster.local:27017/bookhaven"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30000
+  selector:
+    app: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: njengamoses/bookhaven-frontend:1.0.4
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30001
+  selector:
+    app: frontend
