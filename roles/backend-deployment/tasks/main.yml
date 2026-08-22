@@ -1,16 +1,15 @@
 ---
-- name: Pull image from repository
-  docker_image:
-    name: yourdockerhubuser/bookhaven-backend:v1.0.0
-    source: pull
+- name: Ensure Docker is installed (for image pulls)
+  apt:
+    name: docker.io
+    state: present
+    update_cache: yes
+  tags:
+    - backend
 
-- name: Create Node.js Backend Container
-  docker_container:
-    name: bookhaven-backend
-    image: yourdockerhubuser/bookhaven-backend:v1.0.0
-    networks:
-      - name: app-net
-    ports:
-      - "5000:5000"
-    command: "npm start"
-  become: yes
+- name: Confirm backend image is pullable from Docker Hub
+  shell: docker pull {{ backend_image }}
+  register: backend_pull_result
+  changed_when: "'Downloaded newer image' in backend_pull_result.stdout"
+  tags:
+    - backend

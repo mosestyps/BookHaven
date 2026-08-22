@@ -1,0 +1,34 @@
+---
+- name: Setup Kubernetes (k3s) on GCP VM
+  hosts: k3s_cluster
+  become: yes
+  tasks:
+    - name: Download and install k3s
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s
+
+    - name: Ensure k3s service is started and enabled
+      systemd:
+        name: k3s
+        state: started
+        enabled: yes
+
+    - name: Wait for kubeconfig to be generated
+      wait_for:
+        path: /etc/rancher/k3s/k3s.yaml
+        state: present
+        timeout: 30
+
+    - name: Fix permissions on kubeconfig for ansible user
+      file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: '0644'
+
+- name: Run application-specific preparation roles
+  hosts: k3s_cluster
+  become: yes
+  roles:
+    - setup-mongodb
+    - backend-deployment
+    - frontend-deployment

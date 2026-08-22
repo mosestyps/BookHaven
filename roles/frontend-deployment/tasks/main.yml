@@ -1,0 +1,7 @@
+---
+- name: Confirm frontend image is pullable from Docker Hub
+  shell: docker pull {{ frontend_image }}
+  register: frontend_pull_result
+  changed_when: "'Downloaded newer image' in frontend_pull_result.stdout"
+  tags:
+    - frontend

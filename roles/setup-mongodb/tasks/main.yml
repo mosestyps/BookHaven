@@ -1,14 +1,9 @@
 ---
-- name: Run MongoDB Container
-  docker_container:
-    name: app-mongo
-    image: mongo
-    ports:
-      - '27017:27017'
-    volumes:
-      - ./app-mongo-data:/data/db
-    networks:
-      - name: app-net
+- name: Create host directory for MongoDB persistent storage
+  file:
+    path: /data/mongo
+    state: directory
+    mode: '0755'
   tags:
     - database
-    - backend
+    - mongodb
