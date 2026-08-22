@@ -20,3 +20,6 @@ inventory.ini
 
 # Editor Settings
 .vscode/
+
+# Documentation
+documentation/
