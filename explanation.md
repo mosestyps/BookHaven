@@ -1,5 +1,6 @@
 # BookHaven — Technical Explanation
-
+**Live URL Frontend:** http://34.10.177.61
+**Live URL Backend:** http://35.222.168.44:5000/api/books   
 ## 1. Git Workflow
 
 Work was organized into feature branches, one per phase (e.g. `feature/cicd-pipeline`, `feature/terraform-infra`, `feature/ansible-k3s`, `feature/k8s-manifests`), each merged into `master` via Pull Request on GitHub. A `.gitignore` excludes `node_modules`, `.env` files, Terraform state (`*.tfstate`, `.terraform/`), and the real `inventory.ini` (which contains the VM's IP, gitignored in favor of a committed `inventory.ini.example` template, since the IP changes on every `terraform apply`).
@@ -53,7 +54,5 @@ This split reflects a clean separation of concerns: **Terraform provisions infra
 → (separately) Terraform provisions GCP VPC + VM
 → Ansible installs k3s on that VM, confirms images are pullable
 → kubectl apply deploys StatefulSet/Deployments/Services
-→ App is live and reachable at http://34.61.63.222:30001
-
-  
+→ App is live and reachable at http://34.10.177.61 & http://35.222.168.44:5000/api/books  
 Each phase's output is a direct input to the next: CD's pushed images are what Kubernetes actually deploys; Terraform's VM is what Ansible configures; Ansible's working k3s cluster is what `kubectl apply` targets.

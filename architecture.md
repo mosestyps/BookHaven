@@ -49,5 +49,5 @@ Terraform provisions:
     └─────────────────────────────────────┘
          │
          ▼
-    User's browser → http://34.61.63.222:30001
+    User's browser → http://34.10.177.61 & http://35.222.168.44:5000/api/books 
 ```
