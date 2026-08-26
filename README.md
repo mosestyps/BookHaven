@@ -1,6 +1,7 @@
 ## Live Application
 
-**Live URL:** http://34.61.63.222:30001
+**Live URL Frontend:** http://34.10.177.61
+**Live URL Backend:** http://35.222.168.44:5000/api/books        
 
 The application is deployed on a self-managed Kubernetes (k3s) cluster running on a Google Cloud Platform Compute Engine instance, provisioned via Terraform and configured via Ansible.
 
