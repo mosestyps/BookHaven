@@ -1,6 +1,6 @@
 # BookHaven — Architecture Diagram
 
-```
+```text
 Developer (you)
     │
     │ git push
@@ -13,41 +13,32 @@ GitHub Repository (mosestyps/BookHaven)
          │
          ▼
     CD Pipeline → builds Docker images → pushes to Docker Hub
-         (bookhaven-backend, bookhaven-frontend)
+         (njengamoses/bookhaven-backend, njengamoses/bookhaven-frontend)
 
 
 GCP Project (bookhaven-506317)
     │
     ▼
-Terraform provisions:
-    - VPC + Subnet + Firewall
-    - Compute Engine VM (bookhaven-k8s-node)
-         │
-         ▼
-    Ansible configures the VM:
-         - Installs k3s (Kubernetes)
-         - Confirms Docker images are pullable
-         - Prepares MongoDB storage directory
-         │
-         ▼
-    kubectl apply deploys onto k3s:
+Google Kubernetes Engine (GKE) Cluster
+    │
+    ▼
+    kubectl apply deploys manifests:
 
-    ┌─────────────────────────────────────┐
-    │         Kubernetes Cluster           │
-    │                                       │
-    │  MongoDB StatefulSet ── PVC (1Gi)    │
-    │       │                              │
-    │  mongodb-service (headless)          │
-    │       │                              │
-    │  Backend Deployment (3 replicas)     │
-    │       │  connects via MONGODB_URI    │
-    │  backend-service (NodePort 30000)    │
-    │       │                              │
-    │  Frontend Deployment (3 replicas)    │
-    │       │                              │
-    │  frontend-service (NodePort 30001)   │
-    └─────────────────────────────────────┘
+    ┌────────────────────────────────────────────────────────┐
+    │                 Google Kubernetes Engine               │
+    │                                                        │
+    │  MongoDB StatefulSet ── Persistent Volume Claim (PVC)  │
+    │       │                                                │
+    │  mongodb-service (ClusterIP)                           │
+    │       │                                                │
+    │  Backend Deployment (Replicas)                         │
+    │       │  connects via MONGODB_URI                      │
+    │  backend-service (LoadBalancer)                        │
+    │       │                                                │
+    │  Frontend Deployment (Replicas / Recreate Strategy)    │
+    │       │                                                │
+    │  frontend-service (LoadBalancer)                       │
+    └────────────────────────────────────────────────────────┘
          │
          ▼
-    User's browser → http://34.10.177.61 & http://35.222.168.44:5000/api/books 
-```
+    User's browser → [http://34.10.177.61](http://34.10.177.61) (Frontend) & [http://35.222.168.44:5000/api/books](http://35.222.168.44:5000/api/books) (Backend API)
