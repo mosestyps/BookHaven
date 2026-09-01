@@ -1,0 +1,79 @@
+# Step 1: Foundations & Repository Setup
+
+## Overview
+Established the foundational structure for the BookHaven project, ensuring proper version control rules, directory organization, and branch management before beginning development and automation.
+
+## Actions & Implementation
+* **Repository Setup:** Forked and cloned the repository locally onto the Ubuntu development environment.
+* **Ignore Rules Configuration:** Configured `.gitignore` and `.dockerignore` files to exclude sensitive environment files (`.env`), local dependencies (`node_modules/`), and OS-specific artifacts from version control.
+* **Directory Architecture:** Organized the workspace to cleanly separate the full-stack components:
+  * `backend/` (Node.js/Express API)
+  * `client/` (React frontend)
+  * Root infrastructure configuration files (`Vagrantfile`, `ansible.cfg`, `hosts`)
+* **Git Workflow Enforcement:** Adopted a strict feature-branch workflow, ensuring work is done on dedicated branches (e.g., `feature/foundations-setup`) and merged into `master` via GitHub Pull Requests rather than direct pushes.
+# Phase 2: Containerization and CI/CD Pipeline Implementation
+
+## 1. Overview
+In Phase 2, the **BookHaven** application was successfully containerized using tailored multi-stage Dockerfiles and `.dockerignore` files for both the client and backend components. Furthermore, a fully automated CI/CD pipeline was established using GitHub Actions to enforce code quality and automate semantic version-controlled publishing to Docker Hub.
+
+---
+
+## 2. Implementation Summary
+
+* **Application Containerization:**
+  * Created dedicated `Dockerfile` and `.dockerignore` configurations for both the backend API and frontend client environments to ensure minimal image layers and clean build contexts.
+* **Continuous Integration (CI):**
+  * Configured a GitHub Actions workflow (`ci.yml`) to automatically execute linting and test suites on every pull request and push to maintain high code standards.
+* **Continuous Deployment (CD) & Semantic Versioning:**
+  * Implemented an automated deployment workflow (`cd.yml`) triggered upon merging code changes into the `master` branch.
+  * Leveraged GitHub Actions run numbers to implement dynamic semantic versioning tags (such as `1.0.2`), which automatically compile and push images directly to the designated Docker Hub repositories (`njengamoses/bookhaven-backend` and `njengamoses/bookhaven-frontend`).
+
+---
+
+## 3. Verification & Status
+* **GitHub Actions:** All CI and CD pipelines execute successfully with passing status indicators on the `master` branch.
+* **Docker Hub Registry:** Verified successful image publication, showing active semantic version tags (`1.0.2`) compiled and pushed for both the backend and frontend services.
+# Phase 3: Multi-Service Orchestration with Docker Compose
+
+## 1. Overview
+In Phase 3, multi-container orchestration was implemented for the **BookHaven** application using Docker Compose. This allows the frontend client, backend API, and MongoDB database to spin up, communicate over an isolated network, and execute seamlessly as an integrated local environment.
+
+---
+
+## 2. Implementation Summary
+
+* **Multi-Service Architecture:**
+  * **Backend Service:** Configured to build from `./backend/Dockerfile`, exposed on port `5000`, and connected to the database container using `MONGO_URI=mongodb://mongo:27017/bookhaven`.
+  * **Frontend Service:** Configured to build from `./client/Dockerfile`, exposed on port `3000`, and set to depend on the backend service.
+  * **MongoDB Database:** Provisioned using the official `mongo:6.0` image on port `27017` with container naming (`bookhaven_mongo`).
+* **Data Persistence:**
+  * Configured a named local volume (`mongo_data`) mapped to `/data/db` to ensure MongoDB database records persist across container restarts.
+* **Image Optimization:**
+  * Multi-stage Docker builds maintained maximum efficiency, keeping image footprints far below the 400 MB limit:
+    * **`bookhaven-backend`:** ~50.4 MB content size
+    * **`bookhaven-frontend`:** ~26.5 MB content size
+
+---
+
+## 3. Local Verification & Status
+* **Container Lifecycle:** Executed `docker compose up --build -d` and confirmed via `docker compose ps` that all three services (`bookhaven-backend-1`, `bookhaven-frontend-1`, and `bookhaven_mongo`) initialized and maintained healthy `Up` execution states.
+* **Network & Connectivity:** Confirmed successful inter-container communication across the automatically generated `bookhaven_default` network.
+# Development Log — Phases 4, 5, 6
+
+## Phase 4 — Terraform
+- Created GCP project `bookhaven-506317`
+- Enabled Compute Engine API, authenticated via `gcloud auth application-default login`
+- Terraform provisions: VPC, subnet (10.0.1.0/24), firewall (ports 22/80/443/3000/5000/6443/30000-32767), one e2-medium VM
+- Fixed a `.gitignore` bug where `terraform.tfvars` was being force-committed despite an incorrect ignore pattern
+- Verified SSH access with the ansible user before proceeding
+
+## Phase 5 — Ansible + Kubernetes
+- Installed k3s via Ansible `shell` + `systemd` tasks
+- Adapted pre-existing `setup-mongodb`/`backend-deployment`/`frontend-deployment` roles — original versions used `docker_container` (plain Docker), which conflicted with the Kubernetes requirement; rewrote them to prepare the node instead (create storage dir, install Docker, confirm images pull)
+- Debugged a CrashLoopBackOff on backend pods — root cause was an env var name mismatch (`MONGO_URI` in the manifest vs `MONGODB_URI` expected by `server.js`)
+- Fixed frontend NodePort/containerPort mismatch (manifest said 3000, but the Dockerfile serves via nginx on port 80)
+- Verified: all pods Running, app reachable and functional at http://34.61.63.222:30001
+
+## Phase 6 — Integration
+- Confirmed full pipeline: push → CI → CD (Docker Hub) → Terraform infra → Ansible/k3s → kubectl apply → live URL
+- Documented live URL in README.md
