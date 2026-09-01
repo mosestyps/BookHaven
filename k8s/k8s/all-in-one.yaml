@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: mongodb
 spec:
-  serviceName: "mongodb-service"
+  serviceName: mongodb-service
   replicas: 1
   selector:
     matchLabels:
@@ -17,15 +17,15 @@ spec:
         - name: mongodb
           image: mongo:latest
           ports:
-            - containerPort: 27017
-              name: mongo
+            - name: mongo
+              containerPort: 27017
           resources:
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
             requests:
               cpu: "250m"
               memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
           volumeMounts:
             - name: mongo-storage
               mountPath: /data/db
@@ -33,29 +33,35 @@ spec:
     - metadata:
         name: mongo-storage
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+          - ReadWriteOnce
         resources:
           requests:
             storage: 1Gi
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: mongodb-service
 spec:
-  ports:
-    - port: 27017
-      targetPort: 27017
+  clusterIP: None
   selector:
     app: mongodb
-  clusterIP: None
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
 spec:
-  replicas: 3
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: backend
@@ -66,39 +72,45 @@ spec:
     spec:
       containers:
         - name: backend
-          image: njengamoses/bookhaven-backend:1.0.4
+          image: njengamoses/bookhaven-backend:1.0.9
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           resources:
-            limits:
-              cpu: "300m"
-              memory: "256Mi"
             requests:
               cpu: "100m"
               memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
           env:
             - name: MONGODB_URI
               value: "mongodb://mongodb-0.mongodb-service.default.svc.cluster.local:27017/bookhaven"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
 spec:
-  type: NodePort
-  ports:
-    - port: 5000
-      targetPort: 5000
-      nodePort: 30000
+  type: LoadBalancer
   selector:
     app: backend
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+      nodePort: 30000
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
 spec:
-  replicas: 3
+  replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: frontend
@@ -109,26 +121,29 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: njengamoses/bookhaven-frontend:1.0.4
+          image: njengamoses/bookhaven-frontend:v1.0.11
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
-            limits:
-              cpu: "300m"
-              memory: "256Mi"
             requests:
               cpu: "100m"
               memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
 spec:
-  type: NodePort
-  ports:
-    - port: 80
-      targetPort: 80
-      nodePort: 30001
+  type: LoadBalancer
   selector:
     app: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30001
